@@ -154,12 +154,20 @@
     <ClCompile Include="Meteor.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Button.h" />
+    <ClInclude Include="CoordSystem.h" />
+    <ClInclude Include="FlyWheel.h" />
     <ClInclude Include="Frame.h" />
+    <ClInclude Include="MeteorSat.h" />
     <ClInclude Include="Planet.h" />
     <ClInclude Include="Satellite.h" />
     <ClInclude Include="ShaderObject.h" />
     <ClInclude Include="Simulation.h" />
+    <ClInclude Include="StatusScreen.h" />
+    <ClInclude Include="TextBox.h" />
+    <ClInclude Include="Trajectory.h" />
     <ClInclude Include="VectorMath.h" />
+    <ClInclude Include="VerticalSensor.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

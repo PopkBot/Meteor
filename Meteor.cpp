@@ -4,12 +4,22 @@
 #include "Frame.h"
 #include "Simulation.h"
 
+#include "TextBox.h"
+
+
 
 
 void runFrame(Simulation & simulation) {
+
 	
+	sf::Vector2f mousePos;
+
+	bool isTyping = false;
+
 	float r = 10;
-	int w = 1080, h = 1080;
+	float rk = 2;
+	float trajectoryScale = 0.99999;
+	int w = 1000, h = 1800;
 	int mouseX = (int)(w / 2);
 	int mouseY = (int)(h / 2);
 	float mouseSensitivity = 2.0f;
@@ -27,9 +37,10 @@ void runFrame(Simulation & simulation) {
 	int framesStill = 1;
 
 
-	sf::RenderWindow window(sf::VideoMode(h, w), "Tracing", sf::Style::Titlebar | sf::Style::Close); //Titlebar | sf::Style::Close
+	sf::RenderWindow window(sf::VideoMode(h, w), "Tracing", sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize); //Titlebar | sf::Style::Close
+	
 	window.setFramerateLimit(60);
-	window.setPosition(sf::Vector2i(830, 0));
+	window.setPosition(sf::Vector2i(0, 0));
 
 	sf::RenderTexture empityTexture;
 	empityTexture.create(h, w);
@@ -42,8 +53,6 @@ void runFrame(Simulation & simulation) {
 	
 	
 	while (window.isOpen()) {
-		//std::chrono::steady_clock::time_point begin;
-		//std::chrono::steady_clock::time_point end;
 
 		sf::Event event;
 
@@ -52,18 +61,29 @@ void runFrame(Simulation & simulation) {
 		while (window.pollEvent(event))
 		{
 
-			if (event.type == sf::Event::MouseWheelScrolled) {
-				r += (double)event.mouseWheelScroll.delta;
+			if (event.type == sf::Event::Resized) {
+				window.setSize(sf::Vector2u(window.getSize().y*1.8, window.getSize().y));
 			}
+
+			if (event.type == sf::Event::MouseButtonReleased && !mouseHidden) {
+				isTyping = simulation.checkTextBoxesSelection(mousePos);
+				int pressedButtonId = simulation.buttonPressed(mousePos);
+				simulation.procedeButtonCommand(pressedButtonId);
+			}
+
+			if (event.type == sf::Event::MouseWheelScrolled) {
+				r += (double)event.mouseWheelScroll.delta*rk;
+			}
+			
 
 			if (event.type == sf::Event::Closed)
 			{
-
-
 				window.close();
 			}
 			if (event.type == sf::Event::MouseMoved)
 			{
+
+				mousePos = sf::Vector2f(event.mouseMove.x, event.mouseMove.y);
 
 				if (mouseHidden)
 				{
@@ -75,7 +95,7 @@ void runFrame(Simulation & simulation) {
 					if (mx != 0 || my != 0) framesStill = 1;
 				}
 			}
-			if (event.type == sf::Event::KeyPressed) {
+			if (event.type == sf::Event::KeyPressed && !isTyping) {
 				if (event.key.code == sf::Keyboard::Escape) {
 					window.close();
 				}
@@ -91,35 +111,39 @@ void runFrame(Simulation & simulation) {
 					}
 				}
 				if (event.key.code == sf::Keyboard::N) {
+					
+					if (povTower) {
+						r = simulation.planet.radius * 2;
+						rk = 500;
+						trajectoryScale = 0.99;
+					}
+					else
+					{
+						r = 10;
+						rk = 2;
+						trajectoryScale = 0.99999;
+					}
 					povTower = !povTower;
 				}
 
 
 
 
-				//if (event.key.code == sf::Keyboard::C) { dirMoveZ += -1; }// rocket.betta = 0;rocket.alpha = 0;rocket.gamma = 0; }
-				//if (event.key.code == sf::Keyboard::W) { dirMoveX += 1; } //rocket.betta += 0.1f; }
-			//	if (event.key.code == sf::Keyboard::S) { dirMoveX += -1; } //rocket.betta -= 0.1f; }
-			//	if (event.key.code == sf::Keyboard::A) { dirMoveY += -1; } //rocket.gamma += 0.1f; }
-			//	if (event.key.code == sf::Keyboard::D) { dirMoveY += 1; } //rocket.gamma -= 0.1f;}
-				//if (event.key.code == sf::Keyboard::Q) { rocket.bTurnX = 1; } //rocket.alpha += 0.1f; }
-				//if (event.key.code == sf::Keyboard::E) { rocket.bTurnX = -1; } //rocket.alpha -= 0.1f; }
-				//printf("bthrust =%d\n", rocket.bThrust);
+				if (event.key.code == sf::Keyboard::LBracket) { 
+					simulation.satellite.dt-=0.01;
+					if (simulation.satellite.dt < 0) {
+						simulation.satellite.dt = 0;
+					}
+				}
+				if (event.key.code == sf::Keyboard::RBracket) { simulation.satellite.dt += 0.01; }
 
 			}
-			else if (event.type == sf::Event::KeyReleased)
+			if (event.type == sf::Event::KeyReleased && !isTyping)
 			{
 
-				//if (event.key.code == sf::Keyboard::Space)dirMoveZ = 0;
-				//if (event.key.code == sf::Keyboard::C)dirMoveZ = 0; 
-				//if (event.key.code == sf::Keyboard::W)dirMoveX = 0;
-				//if (event.key.code == sf::Keyboard::S)dirMoveX = 0;
-				//if (event.key.code == sf::Keyboard::A)dirMoveY = 0;
-				//if (event.key.code == sf::Keyboard::D)dirMoveY = 0;
-				//if (event.key.code == sf::Keyboard::Q)rocket.bTurnX = 0;
-				//if (event.key.code == sf::Keyboard::E)rocket.bTurnX = 0;
-
-
+			}
+			else if (event.type == sf::Event::TextEntered && isTyping) {
+				simulation.typedToTextBoses(event);
 			}
 
 		}
@@ -150,14 +174,25 @@ void runFrame(Simulation & simulation) {
 		}
 
 		simulation.runSimulation();
-		simulation.draw(shader);
+		
 
 		if (povTower) shader.setUniform("u_pos", pos + simulation.satellite.position);
 		else shader.setUniform("u_pos", pos);
+
+		shader.setUniform("u_trajectory_scale", trajectoryScale);
 		shader.setUniform("u_mouse", sf::Vector2f(mx, my));
+
+
+
+
 		window.draw(empitySprite, &shader);
+		simulation.draw(shader, window);
+		//textBox.draw(window);
+
 		window.display();
 
+		
+		
 	}
 }
 
@@ -165,7 +200,17 @@ int main()
 {
 
 	
+	
+
+	
 	Simulation simulation;
+	////simulation.satellite.rotate(0.5,-0.5,0.5);
+	////simulation.satellite.rotate(1.57,0,0);
+	//simulation.satellite.setStateSecuence(1, 1);
+	//simulation.satellite.setState(1);
+	////simulation.satellite.setStateTurn(sf::Vector3f(0, -45, 0));
+	//simulation.satellite.setOrbit(simulation.planet, simulation.planet.radius*3, 0.5,1.72366,0,0,0);
+	
 	runFrame(simulation);
 
 

@@ -1,0 +1,66 @@
+﻿Build started...
+1>------ Build started: Project: Meteor, Configuration: Debug x64 ------
+1>Meteor.cpp
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(30,1): warning C4305: '=': truncation from 'double' to 'float'
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(90,32): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(90,28): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(90,24): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(90,20): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(91,32): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(91,28): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(91,24): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(91,20): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(92,32): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(92,28): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(92,24): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\Satellite.h(92,20): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\FlyWheel.h(9,43): warning C4305: 'initializing': truncation from 'double' to 'const float'
+1>C:\Users\themr\source\repos\Meteor\FlyWheel.h(13,21): warning C4305: 'initializing': truncation from 'double' to 'float'
+1>C:\Users\themr\source\repos\Meteor\MeteorSat.h(57,1): warning C4305: 'argument': truncation from 'double' to 'T'
+1>        with
+1>        [
+1>            T=float
+1>        ]
+1>C:\Users\themr\source\repos\Meteor\MeteorSat.h(58,1): warning C4305: 'argument': truncation from 'double' to 'T'
+1>        with
+1>        [
+1>            T=float
+1>        ]
+1>C:\Users\themr\source\repos\Meteor\MeteorSat.h(59,1): warning C4305: 'argument': truncation from 'double' to 'T'
+1>        with
+1>        [
+1>            T=float
+1>        ]
+1>C:\Users\themr\source\repos\Meteor\MeteorSat.h(60,1): warning C4305: 'argument': truncation from 'double' to 'T'
+1>        with
+1>        [
+1>            T=float
+1>        ]
+1>C:\Users\themr\source\repos\Meteor\MeteorSat.h(164,33): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\MeteorSat.h(223,24): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+1>C:\Users\themr\source\repos\Meteor\StatusScreen.h(48,54): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+1>        with
+1>        [
+1>            T=float
+1>        ]
+1>C:\Users\themr\source\repos\Meteor\Simulation.h(17,1): warning C4305: 'argument': truncation from 'double' to 'float'
+1>C:\Users\themr\source\repos\Meteor\Simulation.h(18,1): warning C4305: 'argument': truncation from 'double' to 'T'
+1>        with
+1>        [
+1>            T=float
+1>        ]
+1>C:\Users\themr\source\repos\Meteor\Simulation.h(19,1): warning C4305: 'argument': truncation from 'double' to 'float'
+1>C:\Users\themr\source\repos\Meteor\Meteor.cpp(44,52): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+1>        with
+1>        [
+1>            T=float
+1>        ]
+1>C:\Users\themr\source\repos\Meteor\Meteor.cpp(44,49): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+1>        with
+1>        [
+1>            T=float
+1>        ]
+1>C:\Users\themr\source\repos\Meteor\Meteor.cpp(59,48): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+1>Meteor.vcxproj -> C:\Users\themr\source\repos\Meteor\x64\Debug\Meteor.exe
+1>Done building project "Meteor.vcxproj".
+========== Build: 1 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========

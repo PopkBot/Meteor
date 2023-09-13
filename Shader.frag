@@ -1,7 +1,7 @@
 #version 130
 
 uniform vec2 u_resolution;
-uniform float u_time;
+uniform float u_trajectory_scale;
 uniform vec2 u_mouse;
 uniform vec3 u_pos;
 
@@ -9,12 +9,29 @@ uniform vec3 u_planetPos;
 uniform vec3 u_planetCol;
 uniform float u_planetRad;
 
+uniform vec3 u_sunVec;
+
 uniform vec3 u_satPos;
 uniform vec3 u_satCol;
 uniform vec3 u_satVecX;
 uniform vec3 u_satVecY;
 uniform vec3 u_satVecZ;
 
+uniform vec2 screen1_pos;
+uniform vec2 screen1_dim;
+
+uniform float isDrawOrbitalCS;
+uniform vec3 orbX;
+uniform vec3 orbY;
+uniform vec3 orbZ;
+
+uniform vec3 u_elU;
+uniform vec3 u_elV;
+uniform vec3 u_elC;
+
+uniform vec3 u_targetW;
+uniform vec3 u_W;
+uniform vec3 u_moment;
 
 uniform vec3 u_Avec;
 uniform vec3 u_CDvec;
@@ -23,9 +40,9 @@ uniform vec3 u_CDvec;
 
 vec2 minObj;
 vec3 norm;
-const float MAX_DIST = 9999.0;
+const float MAX_DIST = 999999.0;
 const int MAX_REF = 8;
-vec3 light = normalize(vec3(0,-1,0));
+vec3 light = normalize(u_sunVec);
 float trackFlag =0;
 vec2 uv;
 
@@ -35,6 +52,17 @@ mat2 rot(float a){					//матрица
 	float s=sin(a);
 	float c=cos(a);
 	return mat2(c,-s,s,c);
+}
+
+float board( in vec2 p, in vec2 center, in float a,in float b )
+{
+    
+    vec2 pc = p-center;
+    if(abs(pc.x)<a && abs(pc.y)<b){
+    	return 1;
+    }
+    return -1;
+
 }
 
 
@@ -63,9 +91,33 @@ vec2 sphIntersect( in vec3 ro, in vec3 rd, float ra )
     return vec2( -b-h, -b+h );
 }
 
-float plaIntersect( in vec3 ro, in vec3 rd, in vec4 p )
+vec2 rectIntersect( in vec3 ro, in vec3 rd, vec3 c, vec3 u, vec3 v )
 {
-    return -(dot(ro,p.xyz)+p.w)/dot(rd,p.xyz);
+    vec3  q =ro-c;
+    vec3  n = cross(u,v);
+    float t = -dot(n,q)/dot(rd,n);
+    float r =  dot(normalize(u),q + rd*t);
+    float s =  dot(normalize (v),q + rd*t);
+    //if( ((r*r/(length(u)*length(u))+s*s/(length(v)*length(v)) )>1.0)) return vec2(-1.0); //no intersection
+    if(abs(r)>length(u) || abs(s)>length(v))return vec2(-1.0); 
+    return vec2(t,s);
+}
+
+vec2 ellORBIntersect( in vec3 ro, in vec3 rd, vec3 c, vec3 u, vec3 v )
+{
+    vec3  q =ro-c;
+    vec3  n = cross(u,v);
+    float t = -dot(n,q)/dot(rd,n);
+    float r =  dot(normalize(u),q + rd*t);
+    float s =  dot(normalize (v),q + rd*t);
+    if( ((r*r/(length(u)*length(u))+s*s/(length(v)*length(v)) )>1.0) || 
+    	((r*r/(length(u)*length(u))+s*s/(length(v)*length(v)) )<u_trajectory_scale)) return vec2(-1.0); //no intersection
+    return vec2(t,s);
+}
+
+vec3 ellNormal( in vec3 u, vec3 v )
+{
+    return normalize( cross(u,v) );
 }
 
 
@@ -176,6 +228,11 @@ vec2 iRoundedCone( in vec3 ro, in vec3 rd, in vec3 pa, in vec3 pb, in float ra, 
         }
     }
     return r;
+}
+
+float plaIntersect( in vec3 ro, in vec3 rd, in vec4 p )
+{
+    return -(dot(ro,p.xyz)+p.w)/dot(rd,p.xyz);
 }	
 
 
@@ -219,162 +276,74 @@ vec3 castRay(vec3 ro,vec3 rd)
 		trackFlag=2;
 	}
 	
-	/*vec3 boxN;
-	vec3 boxPos=vec3(1,0,0);
-	obj=boxIntersection(ro-boxPos,rd,vec3(1,1,100),boxN);
-	if(obj.x>0.0 && obj.x<minObj.x){
-		minObj=obj;
-		n=boxN;
-		vec3 pos2 = ro-boxPos + obj.x*rd;
-		col=vec3(0.5,0.5,-pos2.z/50);
-
-		
-	}
-*/
 	
 
 		vec3 coneN;
 		vec3 pa=u_satPos;
-		vec3 pb=u_satPos+u_satVecX*1;
-		float ra=0.2;
-		float rb=0.1;
+		vec3 pb=u_satPos+u_satVecZ*3;
+		float ra=0.5;
+		float rb=0.5;
 		//vec4 coneObj = coneIntersect( in vec3  ro, in vec3  rd, in vec3  pa, in vec3  pb, in float ra, in float rb );
 		obj=coneIntersect(  ro,   rd, pa, pb,  ra, rb , coneN);
 		if(obj.x>0.0 && obj.x<minObj.x){
 			minObj=obj;
-			n=coneN;
+			n=-coneN;
 			col=u_satCol;	
-			trackFlag=1;
+			trackFlag=0;
+		}
+
+		vec3 coneN2;
+		pa=u_satPos;
+		pb=u_satPos+u_satVecZ*(-0.5);
+		ra=0.7;
+		rb=0.7;
+		//vec4 coneObj = coneIntersect( in vec3  ro, in vec3  rd, in vec3  pa, in vec3  pb, in float ra, in float rb );
+		obj=coneIntersect(  ro,   rd, pa, pb,  ra, rb , coneN2);
+		if(obj.x>0.0 && obj.x<minObj.x){
+			minObj=obj;
+			n=-coneN2;
+			col=u_satCol;	
+			trackFlag=0;
+		}
+
+
+		/*vec3 planeNormal = u_satVecY;
+		vec4 solarPan1 = vec4(planeNormal,1);
+		vec3 panelPos=u_satPos+u_satVecZ;
+		obj =vec2( plaIntersect(ro-u_satPos, rd, solarPan1));
+		if(obj.x > 0.0 && obj.x < minObj.x) {
+			minObj = obj;
+			n = planeNormal;
+			col=vec3(0,0.5,0);
+		}*/
+
+
+		obj=rectIntersect(  ro, rd, u_satPos+u_satVecZ+u_satVecX*2.5,u_satVecX*2, u_satVecZ);
+		if(obj.x>0.0 && obj.x<minObj.x){
+		minObj=obj;
+		vec3 objPos=ro+rd*obj.x;
+		n=ellNormal(u_satVecX,u_satVecZ);
+		col=vec3(0.05,0.1,0.3);
+		//col=vec3(1.0,1.0,0);
+		trackFlag=3;
+		}
+
+
+		obj=rectIntersect(  ro, rd, u_satPos+u_satVecZ-u_satVecX*2.5,u_satVecX*2, u_satVecZ);
+		if(obj.x>0.0 && obj.x<minObj.x){
+		minObj=obj;
+		vec3 objPos=ro+rd*obj.x;
+		n=ellNormal(u_satVecX,u_satVecZ);
+		col=vec3(0.05,0.1,0.3);
+		//col=vec3(1.0,1.0,0);
+		trackFlag=3;
 		}
 			
 
 
-		/*if(u_fire[0]==1)
-		{
-			vec3 rconeN;
-			vec3 rcpa=pa;
-			//vec3 rcpb=rcpa-normalize(pb-pa);
-			vec3 rcpb=u_thrust;
-			float rcra=0.06;
-			float rcrb=0.01;
-			obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  rconeN);
-			if(obj.x>0.0 && obj.x<minObj.x){
-				minObj=obj;
-				n=rconeN;
-				col=vec3(1,0.2,0);	
-			}
-		}	
-		if(u_fire[1]==1)
-		{
-			vec3 rconeN;
-			vec3 rcpa=u_vecCtrl[1];
-			vec3 rcpb=normalize(rcpa-pb)*u_lvecCtlr+rcpa;
-			float rcra=0.01;
-			float rcrb=0.05;
-			obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  rconeN);
-			if(obj.x>0.0 && obj.x<minObj.x){
-				minObj=obj;
-				n=rconeN;
-				col=vec3(1,0.2,0);	
-			}
-		}
-	if(u_fire[2]==1)
-	{
-		vec3 rconeN;
-		vec3 rcpa=u_vecCtrl[2];
-		vec3 rcpb=normalize(rcpa-pb)*u_lvecCtlr+rcpa;
-		float rcra=0.01;
-		float rcrb=0.05;
-		obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  rconeN);
-		if(obj.x>0.0 && obj.x<minObj.x){
-			minObj=obj;
-			n=rconeN;
-			col=vec3(1,0.2,0);	
-		}
-	}
-	if(u_fire[3]==1)
-	{
-		vec3 rconeN;
-		vec3 rcpa=u_vecCtrl[3];
-		vec3 rcpb=normalize(rcpa-pb)*u_lvecCtlr+rcpa;
-		float rcra=0.01;
-		float rcrb=0.05;
-		obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  rconeN);
-		if(obj.x>0.0 && obj.x<minObj.x){
-			minObj=obj;
-			n=rconeN;
-			col=vec3(1,0.2,0);	
-		}
-	}
-	if(u_fire[4]==1)
-	{
-		vec3 rconeN;
-		vec3 rcpa=u_vecCtrl[4];
-		vec3 rcpb=normalize(rcpa-pb)*u_lvecCtlr+rcpa;
-		float rcra=0.01;
-		float rcrb=0.05;
-		obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  rconeN);
-		if(obj.x>0.0 && obj.x<minObj.x){
-			minObj=obj;
-			n=rconeN;
-			col=vec3(1,0.2,0);	
-		}
-	}
-	if(u_fire[5]==1)
-	{
-		vec3 rconeN;
-		vec3 rcpb=u_vecCtrl[5];
-		vec3 rcpa=u_vecCtrl[4];
-		float rcra=0.01;
-		float rcrb=0.05;
-		obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  rconeN);
-		if(obj.x>0.0 && obj.x<minObj.x){
-			minObj=obj;
-			n=rconeN;
-			col=vec3(1,0.2,0);	
-		}
-	}
-	if(u_fire[6]==1)
-	{
-		vec3 rconeN;
-		vec3 rcpb=u_vecCtrl[6];
-		vec3 rcpa=u_vecCtrl[4];
-		float rcra=0.01;
-		float rcrb=0.05;
-		obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  rconeN);
-		if(obj.x>0.0 && obj.x<minObj.x){
-			minObj=obj;
-			n=rconeN;
-			col=vec3(1,0.2,0);	
-		}
-	}*/
-	
-
-
-
-
-	/*for(int i=1; i<u_trackCount;i++){
-		 spherePos=u_track[i];
-		//vec3 spherePos=vec3(0,0,0);
-		obj=sphIntersect(ro-spherePos,rd,0.2);
-		if(obj.x>0.0 && obj.x<minObj.x){
-			minObj=obj;
-			vec3 objPos=ro+rd*obj.x;
-			n=objPos-spherePos;
-			if(u_track[i].z<=-50)
-				col=vec3(1,1,0);
-			else if(u_track[i].z>-50)
-				col=vec3(1,-u_track[i].z/50,0);
-			trackFlag =1.0;
 		
-
-		//col=texture(u_textureGrass,uv.xy).xyz;
-		}
-		
-	}*/
-
-	vec3 rconeNX;
-		vec3 rcpa=u_satPos+u_satVecX*1.2;
+		vec3 rconeNX;
+		vec3 rcpa=u_satPos+u_satVecX*2;
 		vec3 rcpb=u_satPos;
 		float rcra=0.05;
 		float rcrb=0.05;
@@ -386,8 +355,8 @@ vec3 castRay(vec3 ro,vec3 rd)
 			trackFlag=4;
 		}
 
-	vec3 rconeNY;
-		 rcpa=u_satPos+u_satVecY*1.2;
+		vec3 rconeNY;
+		 rcpa=u_satPos+u_satVecY*2;
 		 rcpb=u_satPos;
 		 rcra=0.05;
 		 rcrb=0.05;
@@ -399,8 +368,8 @@ vec3 castRay(vec3 ro,vec3 rd)
 			trackFlag=4;
 		}
 
-	vec3 rconeNZ;
-		 rcpa=u_satPos+u_satVecZ*1.2;
+		vec3 rconeNZ;
+		 rcpa=u_satPos+u_satVecZ*4;
 		 rcpb=u_satPos;
 		 rcra=0.05;
 		 rcrb=0.05;
@@ -413,22 +382,99 @@ vec3 castRay(vec3 ro,vec3 rd)
 		}	
 
 
-	/*vec3 rAconeN;
-		vec3 rAcpa=pa+u_CDvec;
-		vec3 rAcpb=pa+u_CDvec+u_Avec*4;
-		float rAcra=0.02;
-		float rAcrb=0.02;
-		obj=iRoundedCone(  ro,  rd,  rAcpa,  rAcpb,  rAcra,  rAcrb ,  rAconeN);
+		if(isDrawOrbitalCS>=1){
+				vec3 rconeNXO;
+			rcpa=u_satPos+orbX*4;
+			rcpb=u_satPos;
+			rcra=0.05;
+			rcrb=0.05;
+			obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  rconeNXO);
+			if(obj.x>0.0 && obj.x<minObj.x){
+				minObj=obj;
+				n=rconeNXO;
+				col=vec3(1,0.16,0.33);	
+				trackFlag=5;
+			}
+
+			vec3 rconeNYO;
+			 rcpa=u_satPos+orbY*4;
+			 rcpb=u_satPos;
+			 rcra=0.05;
+			 rcrb=0.05;
+			obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  rconeNYO);
+			if(obj.x>0.0 && obj.x<minObj.x){
+				minObj=obj;
+				n=rconeNYO;
+				col=vec3(0.588,1,0.588);
+				trackFlag=5;
+			}
+
+			vec3 rconeNZO;
+			 rcpa=u_satPos+orbZ*4;
+			 rcpb=u_satPos;
+			 rcra=0.05;
+			 rcrb=0.05;
+			obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  rconeNZO);
+			if(obj.x>0.0 && obj.x<minObj.x){
+				minObj=obj;
+				n=rconeNZO;
+				col=vec3(0.26,0.67,1);
+				trackFlag=5;	
+			}	
+		}
+
+/*
+		vec3 targetW;
+		 rcpa=u_satPos;
+		 rcpb=u_planetPos;
+		 rcra=5;
+		 rcrb=5;
+		obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  targetW);
 		if(obj.x>0.0 && obj.x<minObj.x){
 			minObj=obj;
-			n=rAconeN;
-			col=vec3(1,0,1);	
-		}*/
-		
-	
-	
-	
+			n=targetW;
+			col=vec3(1,0.16,0.33);//розовый
+			trackFlag=5;	
+		}	
 
+		vec3 w_vec;
+		 rcpa=u_satPos+u_W*4;
+		 rcpb=u_satPos;
+		 rcra=0.05;
+		 rcrb=0.05;
+		obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  w_vec);
+		if(obj.x>0.0 && obj.x<minObj.x){
+			minObj=obj;
+			n=w_vec;
+			col=vec3(0.26,0.67,1);//голубой
+			trackFlag=5;	
+		}	
+
+		vec3 moment;
+		 rcpa=u_satPos+u_moment*4;
+		 rcpb=u_satPos;
+		 rcra=0.05;
+		 rcrb=0.05;
+		obj=iRoundedCone(  ro,  rd,  rcpa,  rcpb,  rcra,  rcrb ,  moment);
+		if(obj.x>0.0 && obj.x<minObj.x){
+			minObj=obj;
+			n=moment;
+			col=vec3(0.588,1,0.588);//салатовый
+			trackFlag=5;	
+		}*/	
+		
+
+		obj=ellORBIntersect(  ro, rd, u_elC,u_elU, u_elV);
+		if(obj.x>0.0 && obj.x<minObj.x){
+		minObj=obj;
+		vec3 objPos=ro+rd*obj.x;
+		n=ellNormal(u_elU,u_elV);
+		col=vec3(1,0,0);
+		//col=vec3(1.0,1.0,0);
+		trackFlag=4;
+		}
+
+	
 		
 	if(minObj.x == MAX_DIST) return getsSky(rd);
 	if(trackFlag==1){
@@ -437,20 +483,24 @@ vec3 castRay(vec3 ro,vec3 rd)
 	col *= mix(diffuse,specular,0.5);
 	}
 	else if(trackFlag==2){
-	float diffuse =max(0.01,dot(light,n)*0.8+0.01);
-	float specular= max(0.001,pow( dot(reflect(rd,n),light),0.0001));
+	float diffuse =max(0.01,dot(light,n)*0.8+0.1);
+	float specular= max(0.01,pow( dot(reflect(rd,n),light),0.0001));
 	col *= mix(diffuse,specular,0.99);
 	}
 	else if(trackFlag==4){
 		float diffuse =0;//max(1,dot(light,n)*0.1+0.5);
-		float specular= 10;//max(1,pow( dot(reflect(rd,n),light),0.5));
+		float specular= 1;//max(1,pow( dot(reflect(rd,n),light),0.5));
 		col *= mix(diffuse,specular,100);
+	}
+	else if(trackFlag==5){
+		//float diffuse =0;//max(1,dot(light,n)*0.1+0.5);
+		//float specular= 1;//max(1,pow( dot(reflect(rd,n),light),0.5));
+		//col *= mix(diffuse,specular,100);
 	}
 //col=col+vec3(0.001,0.001,0.001);
 ro += rd * (minObj.x-0.001);
 norm=n;
 return col;
-
 
 }
 
@@ -476,22 +526,46 @@ return col;
 }
 
 
+vec3 ray(in vec2 p, in vec3 col){
+
+
+	float dist;
+
+	float a = screen1_dim.x;
+	float b = screen1_dim.y;
+	vec2  pa = vec2(-u_resolution.x*0.6,u_resolution.y*0.75);
+
+	dist=board( p, pa , a, b );
+	if(dist>0)	{
+		col=vec3(0.2,0.2,0.2);
+	}
+	return col;
+}
+
+
+
 
 
 
 
 
 void main(){
-	 uv = (gl_TexCoord[0].xy-0.5) * u_resolution / u_resolution.y;//(gl_TexCoord[0].xy-0.5)*u_resolution/u_resolution.y
+	uv = (gl_TexCoord[0].xy-0.5) * u_resolution / u_resolution.y;//(gl_TexCoord[0].xy-0.5)*u_resolution/u_resolution.y
 	vec3 rayOrigin = u_pos;
 	vec3 rayDirection = normalize(vec3(1.0,uv));
 	rayDirection.zx *= rot(-u_mouse.y);
 	rayDirection.xy *= rot(u_mouse.x);
 	vec3 col = traceRay(rayOrigin,rayDirection);
-	col.r=pow(col.r,0.45);
+	
+
+	
+	vec2 p = (2.0*gl_FragCoord.xy-u_resolution.xy)* u_resolution/u_resolution.y;
+	//p+=vec2(0,500);
+    //col = ray(p,col);
+
+    col.r=pow(col.r,0.45);
 	col.g=pow(col.g,0.45);
 	col.b=pow(col.b,0.45);
-
 	gl_FragColor = vec4(col, 1);
 
 	//gradientColor( gl_FragColor,uv);
