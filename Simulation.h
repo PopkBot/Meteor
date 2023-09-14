@@ -147,14 +147,6 @@ public:
 			VectorMath::lenght(satellite.position - planet.position),
 			VectorMath::lenght(satellite.state.moment));
 
-		/*printf("x = [%-5.3f ; %-5.3f ; %-5.3f]\ty = [%-5.3f ; %-5.3f ; %-5.3f]\tz = [%-5.3f ; %-5.3f ; %-5.3f]\n",
-			satellite.vecX.x, satellite.vecX.y, satellite.vecX.z,
-			satellite.vecY.x, satellite.vecY.y, satellite.vecY.z,
-			satellite.vecZ.x, satellite.vecZ.y, satellite.vecZ.z);*/
-
-		/*printf("h %-10.5f\t|v| %-10.5f\n",
-			VectorMath::lenght(planet.position-satellite.position),VectorMath::lenght(satellite.position));*/
-
 	}
 
 	sf::Vector3f getAnglesOrbitalToLocal() {

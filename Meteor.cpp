@@ -20,8 +20,8 @@ void runFrame(Simulation & simulation) {
 	float rk = 2;
 	float trajectoryScale = 0.99999;
 	int w = 1000, h = 1800;
-	int mouseX = (int)(w / 2);
-	int mouseY = (int)(h / 2);
+	int mouseX = (int)(w / 4);
+	int mouseY = (int)(h / 4);
 	float mouseSensitivity = 2.0f;
 	float speed = 0.1f;
 	bool mouseHidden = false;
@@ -37,7 +37,7 @@ void runFrame(Simulation & simulation) {
 	int framesStill = 1;
 
 
-	sf::RenderWindow window(sf::VideoMode(h, w), "Tracing", sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize); //Titlebar | sf::Style::Close
+	sf::RenderWindow window(sf::VideoMode(h,w), "Meteor",sf::Style::Titlebar| sf::Style::Close | sf::Style::Resize); //Titlebar | sf::Style::Close
 	
 	window.setFramerateLimit(60);
 	window.setPosition(sf::Vector2i(0, 0));
@@ -48,7 +48,7 @@ void runFrame(Simulation & simulation) {
 
 
 	sf::Shader shader;
-	shader.loadFromFile("Shader.frag", sf::Shader::Fragment);
+	shader.loadFromFile("shader\\MeteorShader.frag", sf::Shader::Fragment);
 	shader.setUniform("u_resolution", sf::Vector2f(h, w));
 	
 	
@@ -79,6 +79,7 @@ void runFrame(Simulation & simulation) {
 			if (event.type == sf::Event::Closed)
 			{
 				window.close();
+				return;
 			}
 			if (event.type == sf::Event::MouseMoved)
 			{
@@ -87,11 +88,11 @@ void runFrame(Simulation & simulation) {
 
 				if (mouseHidden)
 				{
-					int mx = event.mouseMove.x - w / 2;
-					int my = event.mouseMove.y - h / 2;
+					int mx = event.mouseMove.x - w / 4;
+					int my = event.mouseMove.y - h / 4;
 					mouseX += mx;
 					mouseY += my;
-					sf::Mouse::setPosition(sf::Vector2i(w / 2, h / 2), window);
+					sf::Mouse::setPosition(sf::Vector2i(w / 4, h / 4), window);
 					if (mx != 0 || my != 0) framesStill = 1;
 				}
 			}
@@ -187,7 +188,6 @@ void runFrame(Simulation & simulation) {
 
 		window.draw(empitySprite, &shader);
 		simulation.draw(shader, window);
-		//textBox.draw(window);
 
 		window.display();
 
@@ -198,21 +198,9 @@ void runFrame(Simulation & simulation) {
 
 int main()
 {
-
-	
-	
-
 	
 	Simulation simulation;
-	////simulation.satellite.rotate(0.5,-0.5,0.5);
-	////simulation.satellite.rotate(1.57,0,0);
-	//simulation.satellite.setStateSecuence(1, 1);
-	//simulation.satellite.setState(1);
-	////simulation.satellite.setStateTurn(sf::Vector3f(0, -45, 0));
-	//simulation.satellite.setOrbit(simulation.planet, simulation.planet.radius*3, 0.5,1.72366,0,0,0);
-	
 	runFrame(simulation);
-
 
 }
 

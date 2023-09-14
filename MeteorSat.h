@@ -80,10 +80,6 @@ public:
 		fw[2] = FlyWheel(sf::Vector3f(-0.5792, -0.5792, 0.5736));
 		fw[3] = FlyWheel(sf::Vector3f(-0.5792, 0.5792, 0.5736));
 
-		/*fw[0] = FlyWheel(sf::Vector3f(0, 0, 1));
-		fw[1] = FlyWheel(sf::Vector3f(0, 0, 1));
-		fw[2] = FlyWheel(sf::Vector3f(0, 0, 1));
-		fw[3] = FlyWheel(sf::Vector3f(0, 0, 1));*/
 
 	}
 
@@ -193,7 +189,7 @@ public:
 
 		if (dot < 0.5) {
 			state.targetW = -(vecX)*GRAD_TO_RAD*0.4f;
-			//printf("no earth\n");
+			
 		}
 		else {
 			sf::Vector3f planetToSat = VectorMath::normalize(position - planet.position);
@@ -202,7 +198,7 @@ public:
 			a1 = powf(2, -(abs(dot)+0.0) * 5);
 			a2 = powf(2, (abs(dot) - 1) * 3);
 			state.targetW = VectorMath::normalize(wToTargetPos * a1 + wBraking * a2);
-			//printf("see earth\n");
+			
 		}
 		if (dot > 0.99999) {
 			state.targetW = sf::Vector3f(0, 0, 0);
@@ -216,10 +212,7 @@ public:
 			VectorMath::dot(VectorMath::normalize(state.moment),VectorMath::normalize(state.targetW)),
 			a1,a2);
 
-		/*printf("tgW = [%-5.3f ; %-5.3f ; %-5.3f]\tmoment = [%-5.3f ; %-5.3f ; %-5.3f]\tdot = %f\n",
-			state.targetW.x, state.targetW.y, state.targetW.z,
-			state.moment.x, state.moment.y, state.moment.z,
-			VectorMath::dot(VectorMath::normalize(state.moment),VectorMath::normalize(state.targetW)));*/
+		
 
 	}
 
@@ -241,7 +234,9 @@ public:
 		}
 		else {
 			sf::Vector3f wToTargetPos = VectorMath::normalize(VectorMath::cross(vecY, sun.position)) * 0.2f;
-			wToTargetPos = VectorMath::dot(vecZ, VectorMath::normalize(VectorMath::cross(vecY, sun.position))) * vecZ * 0.2f;
+			if (abs(dot) > 0.01) {
+				wToTargetPos = VectorMath::dot(vecZ, VectorMath::normalize(VectorMath::cross(vecY, sun.position))) * vecZ * 0.2f;
+			}
 			sf::Vector3f wBraking = -w * powf(abs(VectorMath::lenght(w)), 2);
 			a1 = powf(2, (abs(dot) - 1) * 4);
 			a2 = powf(2, -abs(dot) * 10);
@@ -270,12 +265,12 @@ public:
 		float dotToSun1 = VectorMath::dot(vecY, solarPlaneVec);
 		float dotToSun2= VectorMath::dot(vecY, sun.position);
 
-		if (!(dotEarth > 0.9999 && VectorMath::lenght(w) < TO_EARTH_W)) {
+		if (!(dotEarth > 0.9999 && VectorMath::lenght(w) < TO_EARTH_W*10)) {
 			toEarth(planet);
 			return;
 		}
 
-		if (!(abs(dotToSun1) < 0.001 && dotToSun2>0 && VectorMath::lenght(w) < TO_SUN_W)) {
+		if (!(abs(dotToSun1) < 0.001 && dotToSun2>0 && VectorMath::lenght(w) < TO_SUN_W*10)) {
 			toSun(sun, planet);
 			return;
 		}

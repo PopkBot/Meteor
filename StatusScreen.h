@@ -19,6 +19,7 @@ public:
 	std::vector<sf::Text> axisStatus;
 	sf::Text stateCode;
 	sf::Text dt;
+	sf::Text instructions;
 
 	StatusScreen() {
 
@@ -37,6 +38,7 @@ public:
 		setUpStateCode();
 		setUpAxisStatus();
 		setUpDt();
+		setUpInstructions();
 
 	}
 
@@ -49,7 +51,17 @@ public:
 		drawStateCode(window);
 		drawAxisStatus(window);
 		drawDt(window);
+		drawInstructions(window);
 
+	}
+
+	void setUpInstructions() {
+			instructions.setFont(font);
+			instructions.setFillColor(sf::Color::Color(255, 165, 0, 255));
+			instructions.setString(L"Управлять камерой \"M\"; переключить камеру на Землю/аппарат \"N\"; ускорить, замедлить \"[\",\"]\"; выход \"Esc\"");
+			instructions.setCharacterSize(15);
+			instructions.setPosition(ancerPoint + sf::Vector2f(10, 950));
+			instructions.setStyle(sf::Text::Bold);
 	}
 
 	void setUpFwStatus() {
@@ -110,7 +122,6 @@ public:
 
 			text.setFont(font);
 			text.setFillColor(sf::Color::Color(255, 165, 0, 255));
-			//text.setString(L"W " + std::to_wstring(i));
 			text.setCharacterSize(20);
 			text.setPosition(ancerPoint + sf::Vector2f(10, 10 + (i+4) * 25));
 			text.setStyle(sf::Text::Bold);
@@ -121,6 +132,10 @@ public:
 		wStatus[0].setString("Wx");
 		wStatus[1].setString("Wy");
 		wStatus[2].setString("Wz");
+	}
+
+	void drawInstructions(sf::RenderWindow& window) {
+		window.draw(instructions);
 	}
 
 	void drawFwStatus(sf::RenderWindow& window) {
@@ -179,6 +194,15 @@ public:
 	void setAxisStatus(sf::Vector3f angles) {
 
 		wchar_t buff[100];
+		if (abs(angles.x) > 1) {
+			angles.x = angles.x / abs(angles.x);
+		}
+		if (abs(angles.y) > 1) {
+			angles.y = angles.y / abs(angles.y);
+		}
+		if (abs(angles.z) > 1) {
+			angles.z = angles.z / abs(angles.z);
+		}
 		swprintf(buff, sizeof(buff), L"X %8.4f град", acos(angles.x*0.99999999) * RAD_TO_GRAD);
 		axisStatus[0].setString(buff);
 

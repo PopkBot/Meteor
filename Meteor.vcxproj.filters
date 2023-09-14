@@ -44,9 +44,6 @@
     <ClInclude Include="FlyWheel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VerticalSensor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="StatusScreen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
